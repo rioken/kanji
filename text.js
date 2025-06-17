@@ -9,36 +9,55 @@ let currentStroke = [];
 let drawnStrokes = [];
 let svgStrokes = [];
 
-function getMousePos(e) {
+function getMouseTouchPos(event) {
   const rect = canvas.getBoundingClientRect();
+  let e = event.type.startsWith("touch") ? event.touches[0] : event; // タッチイベントの場合は touches[0] を使用
   return {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top
   };
 }
 
-canvas.addEventListener("mousedown", (e) => {
+function startDrawing(e) {
   drawing = true;
   currentStroke = [];
-  const pos = getMousePos(e);
+  const pos = getMouseTouchPos(e);
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y);
   currentStroke.push(pos);
-});
+}
 
-canvas.addEventListener("mousemove", (e) => {
+function continueDrawing(e) {
   if (!drawing) return;
-  const pos = getMousePos(e);
+  const pos = getMouseTouchPos(e);
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
   currentStroke.push(pos);
-});
+}
 
-canvas.addEventListener("mouseup", () => {
+function stopDrawing() {
   if (drawing) {
     drawnStrokes.push(currentStroke);
     drawing = false;
   }
+}
+
+// イベントリスナーの追加：対応するマウス＆タッチイベントを統一的に管理
+canvas.addEventListener("mousedown", startDrawing);
+canvas.addEventListener("mousemove", continueDrawing);
+canvas.addEventListener("mouseup", stopDrawing);
+
+canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault(); // スクロールなどのデフォルト動作を防ぐ
+  startDrawing(e);
+});
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault(); // スクロールなどのデフォルト動作を防ぐ
+  continueDrawing(e);
+});
+canvas.addEventListener("touchend", (e) => {
+  e.preventDefault(); // デフォルト動作を防ぐ
+  stopDrawing();
 });
 
 // SVGファイル一覧
@@ -69,13 +88,12 @@ function loadRandomKanji() {
     });
 }
 
-// ★書き順の簡易判定（本数と順序が合えばOK）
+// 書き順の簡易判定（本数と順序が合えばOK）
 function checkAnswer() {
   const message = document.getElementById("resultMessage");
   const icon = document.getElementById("resultIcon");
   icon.innerHTML = ""; // 前回の画像をクリア
 
-  // ストローク数が一致しているか確認
   if (drawnStrokes.length !== svgStrokes.length) {
     message.textContent = `不正解 😢 本数が違います（あなた: ${drawnStrokes.length} / 正: ${svgStrokes.length}）`;
     message.style.color = "red";
@@ -135,30 +153,6 @@ function checkAnswer() {
       valid = false;
       break;
     }
-
-    // SVGストロークの中間点を分割して座標を比較（順序確認）
-    const svgPoints = svgD.match(/L\s*([\d.]+),\s*([\d.]+)/g); // 中間点 (L x,y)
-    if (svgPoints) {
-      for (let j = 1; j < userStroke.length; j++) {
-        const userPoint = userStroke[j];
-        const svgPoint = svgPoints[j - 1]?.match(/([\d.]+),\s*([\d.]+)/);
-
-        if (svgPoint) {
-          const svgPathX = parseFloat(svgPoint[1]) * scaleX;
-          const svgPathY = parseFloat(svgPoint[2]) * scaleY;
-
-          const dxPoint = userPoint.x - svgPathX;
-          const dyPoint = userPoint.y - svgPathY;
-          const pointDistance = Math.sqrt(dxPoint * dxPoint + dyPoint * dyPoint);
-
-          if (pointDistance > 30) { // 中間点の許容誤差
-            valid = false;
-            break;
-          }
-        }
-      }
-    }
-    if (!valid) break;
   }
 
   // 判定結果を表示
