@@ -3,38 +3,62 @@ const ctx = canvas.getContext("2d");
 ctx.lineWidth = 8;
 ctx.strokeStyle = "red";
 ctx.lineCap = "round";
-//関数//
+
+// 状態管理
 let drawing = false;
 let currentStroke = [];
 let drawnStrokes = [];
 let svgStrokes = [];
 
-function getMouseTouchPos(event) {
+/**
+ * 座標を取得する（マウスまたはタッチイベントに対応）
+ */
+function getPos(event) {
   const rect = canvas.getBoundingClientRect();
-  let e = event.type.startsWith("touch") ? event.touches[0] : event; // タッチイベントの場合は touches[0] を使用
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
+  if (event.type.startsWith("touch")) {
+    const touch = event.touches[0] || event.changedTouches[0];
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    };
+  } else {
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  }
 }
 
+/**
+ * 描画開始
+ */
 function startDrawing(e) {
+  e.preventDefault(); // デフォルトの動作（スクロールなど）を無効化
   drawing = true;
   currentStroke = [];
-  const pos = getMouseTouchPos(e);
+
+  const pos = getPos(e);
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y);
   currentStroke.push(pos);
 }
 
+/**
+ * 描画処理（ドラッグまたはスワイプ中）
+ */
 function continueDrawing(e) {
   if (!drawing) return;
-  const pos = getMouseTouchPos(e);
+
+  e.preventDefault(); // デフォルトの動作（スクロールなど）を無効化
+  const pos = getPos(e);
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
   currentStroke.push(pos);
 }
 
+/**
+ * 描画停止（マウスアップまたはタッチ終了）
+ */
 function stopDrawing() {
   if (drawing) {
     drawnStrokes.push(currentStroke);
@@ -42,23 +66,15 @@ function stopDrawing() {
   }
 }
 
-// イベントリスナーの追加：対応するマウス＆タッチイベントを統一的に管理
+/**
+ * イベントリスナーの追加
+ */
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mousemove", continueDrawing);
 canvas.addEventListener("mouseup", stopDrawing);
-
-canvas.addEventListener("touchstart", (e) => {
-  e.preventDefault(); // スクロールなどのデフォルト動作を防ぐ
-  startDrawing(e);
-});
-canvas.addEventListener("touchmove", (e) => {
-  e.preventDefault(); // スクロールなどのデフォルト動作を防ぐ
-  continueDrawing(e);
-});
-canvas.addEventListener("touchend", (e) => {
-  e.preventDefault(); // デフォルト動作を防ぐ
-  stopDrawing();
-});
+canvas.addEventListener("touchstart", startDrawing);
+canvas.addEventListener("touchmove", continueDrawing);
+canvas.addEventListener("touchend", stopDrawing);
 
 // SVGファイル一覧
 const svgList = [
@@ -69,7 +85,9 @@ const svgList = [
   "kanji/0751f.svg"   // 生
 ];
 
-// ランダムにSVGを読み込む
+/**
+ * ランダムにSVGを読み込む
+ */
 function loadRandomKanji() {
   const svgPath = svgList[Math.floor(Math.random() * svgList.length)];
   fetch(svgPath)
@@ -82,13 +100,15 @@ function loadRandomKanji() {
       svg.setAttribute("width", "300");
       svg.setAttribute("height", "300");
 
-      // SVGパス情報（ざっくりストローク数取得用）
+      // SVGパス情報（ストローク数取得用）
       const paths = svg.querySelectorAll("path[id^='kvg:']");
       svgStrokes = Array.from(paths).map(p => p.getAttribute("d"));
     });
 }
 
-// 書き順の簡易判定（本数と順序が合えばOK）
+/**
+ * 書き順の簡易判定（本数と順序が合えばOK）
+ */
 function checkAnswer() {
   const message = document.getElementById("resultMessage");
   const icon = document.getElementById("resultIcon");
@@ -121,7 +141,7 @@ function checkAnswer() {
 
   let valid = true;
 
-  // 順序を比較しながらストロークを判定
+  // 順序比較判定
   for (let i = 0; i < svgStrokes.length; i++) {
     const userStroke = drawnStrokes[i]; // ユーザーのストローク
     const svgD = svgStrokes[i]; // SVGの正しいストローク
@@ -155,7 +175,7 @@ function checkAnswer() {
     }
   }
 
-  // 判定結果を表示
+  // 判定結果表示
   if (valid) {
     message.textContent = "正解！🎉 書き順が正しいです。";
     message.style.color = "green";
@@ -168,7 +188,6 @@ function checkAnswer() {
     const goodbgm = new Audio("bgm/good.mp3");
     goodbgm.currentTime = 0;
     goodbgm.play();
-
   } else {
     message.textContent = "不正解 😢 書き順が違います。";
     message.style.color = "red";
@@ -184,7 +203,9 @@ function checkAnswer() {
   }
 }
 
-// リセット処理
+/**
+ * キャンバスリセット処理
+ */
 function resetCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawnStrokes = [];
@@ -192,7 +213,9 @@ function resetCanvas() {
   document.getElementById("resultIcon").innerHTML = ""; // 画像も消す
 }
 
-// ボタンイベント
+/**
+ * ボタンイベント
+ */
 document.getElementById("checkButton").addEventListener("click", checkAnswer);
 document.getElementById("resetButton").addEventListener("click", resetCanvas);
 document.getElementById("randomButton").addEventListener("click", () => {
@@ -200,5 +223,7 @@ document.getElementById("randomButton").addEventListener("click", () => {
   loadRandomKanji();
 });
 
-// 最初の表示
+/**
+ * 最初の表示
+ */
 window.addEventListener("DOMContentLoaded", loadRandomKanji);
