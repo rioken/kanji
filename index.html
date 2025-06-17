@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+  <title>漢字書き順チェッカー</title>
+
+</head>
+
+<body>
+  <h1>漢字を書いてみよう</h1>
+
+  <div id="wrapper">
+    <div id="svgContainer"></div>
+    <canvas id="drawCanvas" width="300" height="300"></canvas>
+  </div>
+  <div class="btn_list">
+    <button id="checkButton"><img src="img/dekita.png" alt="完成"></button>
+    <button id="resetButton"><img src="img/yarinaosu.png" alt="やり直し"></button>
+    <button id="randomButton"><img src="img/change.jpg" alt="ほかの漢字にする"></button>
+    <div id="resultMessage"></div>
+  </div>
+  <!--正解、不正解の画像表示-->
+  <div class="result"> 
+  <div id="resultMessage"></div>
+  <div id="resultIcon"></div></div>
+
+  <script src="text.js"></script>
+</body>
+
+</html>
