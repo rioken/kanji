@@ -1,7 +1,7 @@
 @charset "utf-8";
 
 body {
-  background-image: url(img/haikei.jpg);
+  background-image: url(/img/haikei.jpg);
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
@@ -28,12 +28,13 @@ canvas {
 }
 
 svg {
-  z-index: 100;
+  z-index: 10;
 }
 
 canvas {
-  z-index: 10;
-  background-color: #fff;
+  z-index: 100;
+  /*background-color: #fff;*/
+
 }
 
 button {
