@@ -1,5 +1,12 @@
 @charset "utf-8";
 
+body {
+  background-image: url(/img/haikei.jpg);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+
 h1 {
   text-align: center;
 }
@@ -20,8 +27,13 @@ canvas {
 
 }
 
+svg {
+  z-index: 100;
+}
+
 canvas {
   z-index: 10;
+  background-color: #fff;
 }
 
 button {
@@ -29,8 +41,13 @@ button {
   border: none;
 }
 
+button:hover {
+  opacity: 0.5;
+}
+
 .btn_list {
   text-align: center;
+  margin-top: 30px;
 }
 
 .result {
@@ -40,6 +57,14 @@ button {
 }
 
 @media screen and (max-width: 767px) {
+
+  body {
+    background-image: url(/img/haikei.jpg);
+    background-repeat: no-repeat;
+    background-position: center center;
+
+  }
+
   .result {
     position: absolute;
     top: 10%;
