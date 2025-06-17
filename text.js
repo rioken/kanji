@@ -69,21 +69,20 @@ function loadRandomKanji() {
     });
 }
 
-// 書き順の簡易判定（本数と順序が合えばOK）
+// ★書き順の簡易判定（本数と順序が合えばOK）
 function checkAnswer() {
-  //関数設定
   const message = document.getElementById("resultMessage");
   const icon = document.getElementById("resultIcon");
   icon.innerHTML = ""; // 前回の画像をクリア
 
+  // ストローク数が一致しているか確認
   if (drawnStrokes.length !== svgStrokes.length) {
     message.textContent = `不正解 😢 本数が違います（あなた: ${drawnStrokes.length} / 正: ${svgStrokes.length}）`;
     message.style.color = "red";
-    // ×画像
+
     const img = document.createElement("img");
-    img.src = "img/NO.png"; // ← ご自身の×画像のパスに合わせて変更
+    img.src = "img/NO.png";
     img.alt = "不正解";
-    //img.width = 48;
     icon.appendChild(img);
 
     const badbgm = new Audio("bgm/bad.mp3");
@@ -92,50 +91,84 @@ function checkAnswer() {
     return;
   }
 
+  const svg = document.getElementById("svgContainer").querySelector("svg");
+  const viewBox = svg.getAttribute("viewBox");
+  let [vbX, vbY, vbWidth, vbHeight] = [0, 0, 109, 109]; // デフォルト
+  if (viewBox) {
+    [vbX, vbY, vbWidth, vbHeight] = viewBox.split(" ").map(parseFloat);
+  }
 
-  // 書き順の厳密判定（始点の順序を比較）
+  const scaleX = canvas.width / vbWidth;
+  const scaleY = canvas.height / vbHeight;
+
   let valid = true;
+
+  // 順序を比較しながらストロークを判定
   for (let i = 0; i < svgStrokes.length; i++) {
-    const userStroke = drawnStrokes[i];
+    const userStroke = drawnStrokes[i]; // ユーザーのストローク
+    const svgD = svgStrokes[i]; // SVGの正しいストローク
+
     if (!userStroke || userStroke.length < 5) {
-      valid = false;
+      valid = false; // ストロークが短すぎる場合
       break;
     }
 
-    const userStart = userStroke[0]; // ユーザーのストロークの始点
-
-    const svgD = svgStrokes[i]; // SVGの正しいストローク
+    // SVGストロークの始点を取得
     const match = svgD.match(/M\s*([\d.]+),\s*([\d.]+)/i); // SVGの始点 (M x,y)
     if (!match) {
-      valid = false;
+      valid = false; // 始点が取得できない場合
       break;
     }
 
-    const svgX = parseFloat(match[1]);
-    const svgY = parseFloat(match[2]);
+    const svgX = parseFloat(match[1]) * scaleX;
+    const svgY = parseFloat(match[2]) * scaleY;
 
-    // キャンバスサイズに合わせて拡大縮小（300x300前提なら無視してOK）
-    // 必要であれば倍率調整を入れてください
+    // ユーザーストロークの始点を取得
+    const userStart = userStroke[0];
 
+    // 始点が許容誤差内か確認
     const dx = userStart.x - svgX;
     const dy = userStart.y - svgY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 30) { // ←ここで許容誤差を設定（大きくするとゆるく、小さくすると厳密）
+    if (distance > 40) { // 始点の許容誤差（手書きに優しい）
       valid = false;
       break;
     }
+
+    // SVGストロークの中間点を分割して座標を比較（順序確認）
+    const svgPoints = svgD.match(/L\s*([\d.]+),\s*([\d.]+)/g); // 中間点 (L x,y)
+    if (svgPoints) {
+      for (let j = 1; j < userStroke.length; j++) {
+        const userPoint = userStroke[j];
+        const svgPoint = svgPoints[j - 1]?.match(/([\d.]+),\s*([\d.]+)/);
+
+        if (svgPoint) {
+          const svgPathX = parseFloat(svgPoint[1]) * scaleX;
+          const svgPathY = parseFloat(svgPoint[2]) * scaleY;
+
+          const dxPoint = userPoint.x - svgPathX;
+          const dyPoint = userPoint.y - svgPathY;
+          const pointDistance = Math.sqrt(dxPoint * dxPoint + dyPoint * dyPoint);
+
+          if (pointDistance > 30) { // 中間点の許容誤差
+            valid = false;
+            break;
+          }
+        }
+      }
+    }
+    if (!valid) break;
   }
 
-  // 正解か不正解か判定
+  // 判定結果を表示
   if (valid) {
     message.textContent = "正解！🎉 書き順が正しいです。";
     message.style.color = "green";
-    // 〇画像
+
     const img = document.createElement("img");
-    img.src = "img/OK.png"; // ← ご自身の〇画像のパスに合わせて変更
+    img.src = "img/OK.png";
     img.alt = "正解";
-    //img.width = 48;
     icon.appendChild(img);
 
     const goodbgm = new Audio("bgm/good.mp3");
@@ -146,11 +179,9 @@ function checkAnswer() {
     message.textContent = "不正解 😢 書き順が違います。";
     message.style.color = "red";
 
-    // ×画像
     const img = document.createElement("img");
-    img.src = "img/NO.png"; // ← ご自身の×画像のパスに合わせて変更
+    img.src = "img/NO.png";
     img.alt = "不正解";
-    //img.width = 48;
     icon.appendChild(img);
 
     const badbgm = new Audio("bgm/bad.mp3");
