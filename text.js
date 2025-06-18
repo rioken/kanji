@@ -84,12 +84,43 @@ const svgList = [
   "kanji/05b66.svg",  // 学
   "kanji/0751f.svg"   // 生
 ];
+// 学年で分ける
+const gradeKanjiLists = {
+  "1": [
+    "kanji/grade1/06c17.svg",  // 気
+    "kanji/grade1/07a7a.svg",  // 空
+    "kanji/grade1/051fa.svg",   // 出
+    "kanji/grade1/053f3.svg",   // 右
+    "kanji/grade1/068ee.svg",   // 森
+    "kanji/grade1/072ac.svg",   // 犬
+    "kanji/grade1/096e8.svg",   // 雨
+    "kanji/grade1/0706b.svg",   // 火
+    "kanji/grade1/05186.svg",   // 円
+    "kanji/grade1/06821.svg",   // 校
+    "kanji/grade1/07389.svg",   // 玉
+    "kanji/grade1/08033.svg",   // 耳
 
-/**
- * ランダムにSVGを読み込む
- */
+  ],
+  "2": [
+    "kanji/grade2/05e30.svg",  // 帰
+    "kanji/grade2/05f15.svg",  // 引
+    "kanji/grade2/06b4c.svg",  // 歌
+    "kanji/grade2/08a08.svg",  // 計
+    "kanji/grade2/09b5a.svg",  // 魚
+    "kanji/grade2/096f2.svg",  // 雲
+    "kanji/grade2/0590f.svg",  // 夏
+    "kanji/grade2/0697d.svg",  // 楽
+    "kanji/grade2/05712.svg",  // 園
+    "kanji/grade2/09854.svg",  // 顔
+  ]
+};
+
+let currentGrade = "1"; // 初期値を1年生に設定
+
+/*ランダムにSVGを読み込む（学年対応）*/
 function loadRandomKanji() {
-  const svgPath = svgList[Math.floor(Math.random() * svgList.length)];
+  const list = gradeKanjiLists[currentGrade];
+  const svgPath = list[Math.floor(Math.random() * list.length)];
   fetch(svgPath)
     .then(res => res.text())
     .then(svgText => {
@@ -100,15 +131,12 @@ function loadRandomKanji() {
       svg.setAttribute("width", "300");
       svg.setAttribute("height", "300");
 
-      // SVGパス情報（ストローク数取得用）
       const paths = svg.querySelectorAll("path[id^='kvg:']");
       svgStrokes = Array.from(paths).map(p => p.getAttribute("d"));
     });
 }
 
-/**
- * 書き順の簡易判定（本数と順序が合えばOK）
- */
+/*書き順の簡易判定（本数と順序が合えばOK）*/
 function checkAnswer() {
   const message = document.getElementById("resultMessage");
   const icon = document.getElementById("resultIcon");
@@ -178,7 +206,7 @@ function checkAnswer() {
   // 判定結果表示
   if (valid) {
     message.textContent = "正解！🎉 書き順が正しいです。";
-    message.style.color = "green";
+
 
     const img = document.createElement("img");
     img.src = "img/OK.png";
@@ -203,19 +231,27 @@ function checkAnswer() {
   }
 }
 
-/**
- * キャンバスリセット処理
- */
+/*キャンバスリセット処理*/
 function resetCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawnStrokes = [];
   document.getElementById("resultMessage").textContent = "";
   document.getElementById("resultIcon").innerHTML = ""; // 画像も消す
 }
+/*学年ボタン切り替え*/
+document.getElementById("grade1_btn").addEventListener("click", () => {
+  currentGrade = "1";
+  resetCanvas();
+  loadRandomKanji();
+});
 
-/**
- * ボタンイベント
- */
+document.getElementById("grade2_btn").addEventListener("click", () => {
+  currentGrade = "2";
+  resetCanvas();
+  loadRandomKanji();
+});
+
+/*ボタンイベント*/
 document.getElementById("checkButton").addEventListener("click", checkAnswer);
 document.getElementById("resetButton").addEventListener("click", resetCanvas);
 document.getElementById("randomButton").addEventListener("click", () => {
