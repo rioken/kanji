@@ -54,6 +54,7 @@ button:hover {
 
 .grade_btn {
   text-align: right;
+  margin-right: 10%;
 }
 
 .btn_list {
@@ -65,21 +66,29 @@ button:hover {
   margin-top: 30px;
 }
 
-.result {
+/*.result {
   position: absolute;
   top: 10%;
   left: 35%;
   z-index: 500;
+}*/
+
+#resultIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 
 #resultMessage {
   color: #000;
   position: absolute;
   top: 60%;
-  left: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
-  margin: 0 auto;
-  width: 100%;
+
 }
 
 .grade_btnitems {
@@ -99,16 +108,23 @@ button:hover {
 
   }
 
-  .result {
+  .btn_list {
+    margin-top: 35px;
+  }
+
+  #resultIcon {
     position: absolute;
-    top: 10%;
-    left: 3%;
+    top: 58%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
   }
 
   #resultMessage {
-    top: 57%;
-    left: 5%;
-    margin: 0 auto;
+    top: 59%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
     width: 100%;
   }
 }
